@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Kolasein - Pembuat Kolase Foto</title>
+  <meta name="description" content="Upload foto, atur layout dalam satu frame, download sebagai satu gambar. Gratis, tanpa login.">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="app">
+
+    <!-- Upload Screen -->
+    <div id="upload-screen">
+      <div class="upload-wrap">
+        <h1>Kolasein</h1>
+        <p>Upload foto, atur layout fleksibel, dan simpan dalam satu frame.</p>
+
+        <div id="restore-banner" class="restore-banner" hidden>
+          <div class="restore-text">
+            <strong>Draf Tersimpan Ditemukan</strong>
+            <span id="restore-info">Proyek sebelumnya tersedia</span>
+          </div>
+          <button id="restore-btn" class="secondary-btn" aria-label="Buka draf proyek sebelumnya">Buka Draf</button>
+        </div>
+
+        <div id="drop-zone" tabindex="0" role="button" aria-label="Upload foto atau buka proyek">
+          <svg class="drop-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/>
+            <line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+          <p class="drop-title">Drop foto atau file proyek di sini</p>
+          <p class="drop-subtitle">atau tap / klik untuk memilih file</p>
+          <p class="drop-hint">Format gambar (JPG, PNG, WEBP) atau file proyek (.kolasein, .json)</p>
+          <input type="file" id="file-input" multiple accept="image/*,.kolasein,.nemuframe,.json" hidden>
+        </div>
+
+        <div class="upload-actions">
+          <button id="upload-load-btn" class="text-link-btn" aria-label="Buka file proyek">
+            Atau buka file proyek (.kolasein)
+          </button>
+          <input type="file" id="upload-project-input" accept=".kolasein,.nemuframe,.json" hidden>
+        </div>
+      </div>
+    </div>
+
+    <!-- Editor Screen -->
+    <div id="editor-screen" hidden>
+
+      <!-- Sidebar / Control Panel (Left on Desktop, Bottom on Mobile) -->
+      <aside id="sidebar">
+
+        <!-- Mobile Navigation Tabs (Only visible on screens <= 800px) -->
+        <nav id="mobile-tabs" class="mobile-tabs" role="tablist" aria-label="Menu Editor">
+          <button class="mobile-tab-btn active" role="tab" aria-selected="true" data-tab="tab-presets" aria-controls="tab-presets">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="3" y="3" width="18" height="18" rx="2"/>
+              <line x1="3" y1="12" x2="21" y2="12"/>
+              <line x1="12" y1="12" x2="12" y2="21"/>
+            </svg>
+            <span>Layout</span>
+          </button>
+
+          <button class="mobile-tab-btn" role="tab" aria-selected="false" data-tab="tab-photos" aria-controls="tab-photos">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="3" y="3" width="18" height="18" rx="2"/>
+              <circle cx="8.5" cy="8.5" r="1.5"/>
+              <polyline points="21 15 16 10 5 21"/>
+            </svg>
+            <span>Foto (<span id="mobile-photo-count">0</span>)</span>
+          </button>
+
+          <button class="mobile-tab-btn" role="tab" aria-selected="false" data-tab="tab-style" aria-controls="tab-style">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M12 2a10 10 0 0 1 0 20z"/>
+            </svg>
+            <span>Gaya</span>
+          </button>
+
+          <button class="mobile-tab-btn" role="tab" aria-selected="false" data-tab="tab-project" aria-controls="tab-project">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+              <polyline points="17 21 17 13 7 13 7 21"/>
+              <polyline points="7 3 7 8 15 8"/>
+            </svg>
+            <span>Proyek</span>
+          </button>
+        </nav>
+
+        <!-- Scrollable Content Container -->
+        <div class="sidebar-content-scroll">
+
+          <!-- 1. Layout Presets Section -->
+          <div id="tab-presets" class="sidebar-tab-content active" role="tabpanel">
+            <div class="sidebar-section">
+              <div class="section-header">
+                <h2>Template Layout</h2>
+              </div>
+              <p class="section-hint">Pilih susunan grid instan sesuai jumlah foto.</p>
+              <div id="layout-presets" class="preset-grid" role="group" aria-label="Pilihan template layout"></div>
+            </div>
+          </div>
+
+          <!-- 2. Foto & Reorder Section -->
+          <div id="tab-photos" class="sidebar-tab-content" role="tabpanel">
+            <div class="sidebar-section">
+              <div class="section-header">
+                <h2>Foto (<span id="photo-count">0</span>)</h2>
+                <button id="add-more-btn" aria-label="Tambah foto">+ Tambah</button>
+              </div>
+              <p class="section-hint">Drag thumbnail atau tap dua foto berturut-turut untuk bertukar posisi.</p>
+              <div id="thumbnails" role="list" aria-label="Daftar foto dan urutan"></div>
+              <input type="file" id="add-file-input" multiple accept="image/*" hidden>
+            </div>
+          </div>
+
+          <!-- 3. Format & Gaya (Ratio, Gap, Background) Section -->
+          <div id="tab-style" class="sidebar-tab-content" role="tabpanel">
+            <div class="sidebar-section">
+              <h2>Aspect Ratio</h2>
+              <div id="ratio-options" role="radiogroup" aria-label="Pilih aspect ratio"></div>
+              <div id="custom-ratio" hidden>
+                <input type="number" id="custom-w" value="4" min="1" max="20" aria-label="Lebar ratio">
+                <span class="ratio-sep">:</span>
+                <input type="number" id="custom-h" value="3" min="1" max="20" aria-label="Tinggi ratio">
+              </div>
+            </div>
+
+            <div class="sidebar-section">
+              <h2>Jarak Antar Foto (Gap)</h2>
+              <div class="control-row">
+                <input type="range" id="gap-slider" min="0" max="24" value="4" aria-label="Jarak antar foto">
+                <output id="gap-value" class="val">4px</output>
+              </div>
+            </div>
+
+            <div class="sidebar-section">
+              <h2>Warna Background</h2>
+              <div class="control-row">
+                <input type="color" id="bg-color" value="#e0e0e0" aria-label="Warna background frame">
+                <span id="bg-color-label" class="color-label">#e0e0e0</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 4. Manajemen Proyek Section -->
+          <div id="tab-project" class="sidebar-tab-content" role="tabpanel">
+            <div class="sidebar-section project-section">
+              <h2>Manajemen Proyek</h2>
+              <p class="section-hint">Simpan proyek ke file untuk dibuka kapan saja.</p>
+              <div class="project-btn-group">
+                <button id="save-project-btn" class="project-btn" aria-label="Simpan proyek ke file">
+                  Simpan Proyek
+                </button>
+                <button id="load-project-btn" class="project-btn" aria-label="Buka proyek dari file">
+                  Buka Proyek
+                </button>
+                <input type="file" id="editor-project-input" accept=".kolasein,.nemuframe,.json" hidden>
+              </div>
+              <button id="reset-project-btn" class="reset-btn" aria-label="Mulai dari awal">
+                Reset Kolase
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Export Section -->
+        <div class="sidebar-section export-section">
+          <div class="export-btn-group">
+            <button id="export-png" class="export-btn primary">Download PNG</button>
+            <button id="export-jpg" class="export-btn">Download JPG</button>
+          </div>
+        </div>
+
+      </aside>
+
+      <!-- Canvas Area (Right on Desktop, Top on Mobile) -->
+      <main id="canvas-area">
+        <div id="collage-container">
+          <div id="collage-frame"></div>
+        </div>
+        <p id="collage-hint">
+          Geser border untuk resize. Geser foto untuk crop. Tap foto untuk kontrol.
+        </p>
+      </main>
+
+    </div>
+
+  </div>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
